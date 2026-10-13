@@ -72,6 +72,43 @@ encodes the JPEG — one still request is enough. `com.agc.Rea50Shot` does exact
 and it is what the 50MP button now calls. `Eraw50Burst` is left in the APK, so restoring
 the six-frame merge is a one-line change in `patch_agc.py` (`patch_button`).
 
+### Why a RAW or YUV burst cannot work on this HAL
+
+Measured on the device:
+
+| Attempt | Result |
+|---|---|
+| six stills fired 40 ms apart (the original burst) | six RAW10 frames, **all black** — captured during the swap |
+| RAW10 8160x6120 option 2, primed, 1.6 s wait, eight stills | **zero frames** — an app RAW stream is not part of the HighResolution graph |
+| YUV_420_888 8160x6120 option 2 + preview | session **rejected**, `-EINVAL` |
+| JPEG 8160x6120 option 2, one still | works — the HAL's own 50 MP JPEG, ~14 MB |
+
+The vendor HAL says the same thing. Its stream dump shows the YUV attempt arriving
+correctly and being turned down:
+
+```
+stream[0]: scenarioType(YUV_CAPTURE), format(0x23), size(8160x6120), option(0x2), stream_use_case(131072)
+stream[1]: scenarioType(PREVIEWCB),   format(0x23), size(1280x960), option(0x1)
+ScenarioManager: isValidStreamConfiguration=true, shootingMode=UNI_SHOOTING_MODE_GALAXY_RAW_HIRES
+ScenarioFactorySec: CreateScenarioUnit: JPEG
+AIDL_CameraDeviceSession: ConfigureStreams: configure stream failed: Invalid argument(-22)
+```
+
+and the CHI pipeline table in `/vendor/lib64/libchifeature2.so` names the graph that does
+the work:
+
+```
+HighResolutionAiRealtimeSensor2RDI         sensor -> RDI (the HAL's internal raw dump)
+HighResolutionHighResBayerBpsIpeGpu2Yuv    Bayer -> BPS/IPE/GPU -> YUV (internal)
+HighResolutionYuv2Jpeg                     YUV -> JPEG
+```
+
+RAW enters that chain as the HAL's own RDI and the YUV exists only inside it; neither is an
+app-facing stream. The only HighResolution output an app can receive is the finished JPEG,
+which is what this port uses. A multi-frame merge would have to happen in the JPEG domain
+(two or three HAL shots averaged), which the GCam session window makes marginal, so it is
+not implemented here.
+
 ## Requirements
 
 - Galaxy Z Fold 5 on LineageOS 23.2 (or any ROM whose Samsung vendor HAL is intact)
