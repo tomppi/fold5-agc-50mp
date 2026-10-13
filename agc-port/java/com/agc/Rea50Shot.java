@@ -168,6 +168,10 @@ public final class Rea50Shot {
             String name = "AGC_50MP_" + System.currentTimeMillis() + ".jpg";
             boolean saved = Eraw50IO.saveJpeg(ctx, out[0], name);
             Log.i(TAG, "50MP: saved=" + saved + " " + name + " (" + out[0].length + " bytes)");
+            // Configuring our session on GCam's device closes GCam's own session, which leaves
+            // its viewfinder frozen. GCam's internal restart path Class.forName()s an
+            // unobfuscated class name and throws in this build, so bring the UI back ourselves.
+            restartCameraUi(ctx);
             return saved;
         } catch (Throwable t) {
             Log.i(TAG, "50MP: capture EX " + t);
@@ -195,6 +199,21 @@ public final class Rea50Shot {
         Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
         boolean front = facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT;
         return front ? (sensor + degrees) % 360 : (sensor - degrees + 360) % 360;
+    }
+
+    private static void restartCameraUi(Context ctx) {
+        try {
+            android.content.Intent i = ctx.getPackageManager()
+                    .getLaunchIntentForPackage(ctx.getPackageName());
+            if (i != null) {
+                i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                        | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                ctx.startActivity(i);
+                Log.i(TAG, "50MP: camera UI restart requested");
+            }
+        } catch (Throwable t) {
+            Log.i(TAG, "50MP: restart failed " + t);
+        }
     }
 
     private static void setVendorKeys(CaptureRequest.Builder b) {
