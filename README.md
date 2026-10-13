@@ -137,7 +137,8 @@ vendor stream option.
 The RAW frames at option 1 and option 3 do arrive (62,668,800 bytes, rowStride 10240), but
 they are dummy RDI readouts: unpacking the RAW10 shows 100% (option 1) and 95% (option 3)
 of 10-bit samples below the sensor's black level of 256, with only clipped highlights above
-it. The HAL's own log names them - `Skip SetPriorityMetadata for Dummy RDI for
+it. A follow-up probe kept one session open and fired eleven stills over ~8 s: not one
+usable frame. The HAL's own log names them - `Skip SetPriorityMetadata for Dummy RDI for
 Highresolution` - and the exposed RDI frames go to its internal pipeline, which is why no
 app-facing RAW burst is possible on this HAL. The vendor keys `captureHint`,
 `burstShotFps` and `highResolutionMode` are all accepted on a still request (none changed
