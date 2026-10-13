@@ -109,6 +109,13 @@ which is what this port uses. A multi-frame merge would have to happen in the JP
 (two or three HAL shots averaged), which the GCam session window makes marginal, so it is
 not implemented here.
 
+Decompiling the use case itself (`com.qti.chi.override.so` from `/vendor/lib64/hw`, the
+library that prints the `[CHI_HR]` lines) shows the same shape: the HighResolution path
+dispatches on stream format, with the JPEG format (`0x100`) taking a separate branch off
+the RDI handling, and it tracks the RDI frame number beside the app's result frames
+(`RDI for Highresolution = 13` against `m_nextAppResultFrame: 12` in the log). Nothing in
+that code routes RDI or intermediate YUV to an app stream.
+
 ## Requirements
 
 - Galaxy Z Fold 5 on LineageOS 23.2 (or any ROM whose Samsung vendor HAL is intact)
