@@ -1,0 +1,7 @@
+# q5q_cameraserver_hr v4
+allow init system_file:file relabelfrom;
+allow init cameraserver_exec:file relabelto;
+allow cameraserver system_file:file { execute execute_no_trans };
+allow init cameraserver:process transition;
+allow init cameraserver_exec:file { read getattr map execute open };
+allow cameraserver cameraserver_exec:file entrypoint;

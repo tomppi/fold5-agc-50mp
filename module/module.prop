@@ -1,0 +1,6 @@
+id=q5q_cameraserver_hr
+name=q5q cameraserver HighResolution (50MP) v8
+version=v8
+versionCode=8
+author=tomppi
+description=Patched cameraserver: (1) filterParameters() accepts the Samsung vendor session keys, (2) a session whose output stream uses Samsung's high-resolution stream option (useCase 0x20000) gets One UI's PDK parameter string forwarded over vendor.samsung.hardware.camera.device.ISehCameraDeviceSession.setParameters before configureStreams. The string defaults to "shootingmode=40;ssm_shot_mode=2" and is overridable with persist.camera.samsung_hr_params. v4 adds skip_mount so the overlayfs metamodule does not copy the binary (its copy loses the cameraserver_exec label, which made init refuse to start the service) and mounts the binary itself with the correct context. Uninstall + reboot restores stock.
