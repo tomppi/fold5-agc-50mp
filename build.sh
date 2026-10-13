@@ -27,14 +27,14 @@ echo "== 1/6 decompile == v4.1 (source of the 50 MP feature classes)"
 [ -d "$OUT/v41" ] || "$APKTOOL" d -f -o "$OUT/v41" "$V41_APK"
 
 echo "== 2/6 apply the port =="
-python3 "$HERE/patch_agc.py" --v6 "$OUT/v6" --v41 "$OUT/v41" --here "$HERE"
+python3 "$HERE/agc-port/patch_agc.py" --v6 "$OUT/v6" --v41 "$OUT/v41" --here "$HERE/agc-port"
 
 echo "== 3/6 compile Rea50Shot (single-shot 50 MP) =="
 AJ=$(ls "$ANDROID_HOME"/platforms/android-*/android.jar | sort -V | tail -1)
 rm -rf "$OUT/classes" "$OUT/dex" && mkdir -p "$OUT/classes" "$OUT/dex"
 javac --release 8 -nowarn -cp "$AJ" -d "$OUT/classes" \
-    "$HERE/java/com/agc/Rea50Shot.java" "$HERE/java/stubs/com/agc/LEraw50.java" \
-    "$HERE/java/stubs/com/agc/Eraw50IO.java"
+    "$HERE/agc-port/java/com/agc/Rea50Shot.java" "$HERE/agc-port/java/stubs/com/agc/LEraw50.java" \
+    "$HERE/agc-port/java/stubs/com/agc/Eraw50IO.java"
 "$BT/d8" --release --lib "$AJ" --output "$OUT/dex" "$OUT"/classes/com/agc/Rea50Shot*.class
 
 echo "== 4/6 rebuild the APK =="
