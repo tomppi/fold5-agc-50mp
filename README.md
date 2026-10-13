@@ -116,6 +116,33 @@ the RDI handling, and it tracks the RDI frame number beside the app's result fra
 (`RDI for Highresolution = 13` against `m_nextAppResultFrame: 12` in the log). Nothing in
 that code routes RDI or intermediate YUV to an app stream.
 
+### The full configuration matrix, measured
+
+A standalone probe walked every untried HighResolution configuration on the device
+(16 cases, one run): **12 GOOD, 1 EMPTY, 3 REJECTED**.
+
+```
+JPEG 8160x6120 4:3   GOOD 7.5 MB      JPEG 8160x4592 16:9  GOOD 4.8 MB
+JPEG 6112x6112 1:1   GOOD 4.5 MB      JPEG 7680x4320       GOOD 4.8 MB
+JPEG 7344x6120       GOOD 6.2 MB      JPEG 8160x3184       GOOD 3.8 MB
+HEIC 8160x6120       GOOD 8.1 MB      RAW10 8160x6120 opt1 GOOD (unexposed)
+RAW10 8160x6120 opt3 GOOD (unexposed) RAW_SENSOR 8160x6120 EMPTY
+RAW10 8160x6120 opt0 REJECTED         YUV 4080x3060 opt2   REJECTED
+```
+
+Every high-resolution JPEG size the HAL advertises delivers a real file at the requested
+dimensions - 50 MP in 4:3, 16:9, 1:1 or 8K-wide is available to any app that asks with the
+vendor stream option.
+
+The RAW frames at option 1 and option 3 do arrive (62,668,800 bytes, rowStride 10240), but
+they are dummy RDI readouts: unpacking the RAW10 shows 100% (option 1) and 95% (option 3)
+of 10-bit samples below the sensor's black level of 256, with only clipped highlights above
+it. The HAL's own log names them - `Skip SetPriorityMetadata for Dummy RDI for
+Highresolution` - and the exposed RDI frames go to its internal pipeline, which is why no
+app-facing RAW burst is possible on this HAL. The vendor keys `captureHint`,
+`burstShotFps` and `highResolutionMode` are all accepted on a still request (none changed
+what was delivered).
+
 ## Requirements
 
 - Galaxy Z Fold 5 on LineageOS 23.2 (or any ROM whose Samsung vendor HAL is intact)
